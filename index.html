@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>旅行分帳小幫手</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f5f3ef;
+  color: #444;
+  font-family:
+    -apple-system,
+    BlinkMacSystemFont,
+    "Noto Sans TC",
+    "PingFang TC",
+    "Microsoft JhengHei",
+    sans-serif;
+}
+
+.container {
+  max-width: 760px;
+  margin: auto;
+  padding: 22px 16px 50px;
+}
+
+h1 {
+  text-align: center;
+  font-size: 25px;
+  margin: 8px 0 5px;
+  font-weight: 700;
+  color: #444;
+}
+
+.subtitle {
+  text-align: center;
+  color: #999;
+  font-size: 13px;
+  margin-bottom: 22px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 15px;
+  box-shadow: 0 3px 15px rgba(0,0,0,.045);
+}
+
+.card-title {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 6px;
+}
+
+input,
+select,
+button {
+  font-family: inherit;
+}
+
+input,
+select {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 11px;
+  padding: 12px;
+  font-size: 15px;
+  background: #fafafa;
+  color: #444;
+  outline: none;
+}
+
+input:focus,
+select:focus {
+  border-color: #aaa;
+  background: white;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.full {
+  grid-column: 1 / -1;
+}
+
+.people {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+}
+
+.person {
+  border: 1px solid #ddd;
+  background: #fafafa;
+  border-radius: 10px;
+  padding: 10px 4px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 13px;
+  transition: .15s;
+  user-select: none;
+}
+
+.person.selected {
+  background: #555;
+  color: white;
+  border-color: #555;
+}
+
+.add-btn {
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 14px;
+  background: #555;
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 15px;
+}
+
+.add-btn:active {
+  transform: scale(.98);
+}
+
+.rate-box {
+  background: #f7f5f1;
+  border-radius: 12px;
+  padding: 13px;
+  margin-top: 12px;
+  font-size: 13px;
+  color: #777;
+}
+
+.rate-box input {
+  margin-top: 7px;
+  background: white;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.person-summary {
+  border: 1px solid #eee;
+  border-radius: 14px;
+  padding: 14px;
+  background: #fcfcfc;
+}
+
+.person-name {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.money-line {
+  font-size: 13px;
+  color: #777;
+  margin: 3px 0;
+}
+
+.balance-positive {
+  color: #55755d;
+  font-weight: 700;
+}
+
+.balance-negative {
+  color: #9a5e5e;
+  font-weight: 700;
+}
+
+.balance-zero {
+  color: #888;
+  font-weight: 700;
+}
+
+.total-box {
+  background: #f7f5f1;
+  border-radius: 14px;
+  padding: 15px;
+  text-align: center;
+  margin-bottom: 12px;
+}
+
+.total-main {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.total-sub {
+  color: #888;
+  font-size: 14px;
+}
+
+.expense {
+  border: 1px solid #eee;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+  background: #fff;
+}
+
+.expense-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.expense-name {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.expense-category {
+  display: inline-block;
+  font-size: 11px;
+  color: #888;
+  background: #f1efeb;
+  padding: 3px 7px;
+  border-radius: 6px;
+  margin-left: 5px;
+}
+
+.expense-money {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.krw {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.twd {
+  font-size: 12px;
+  color: #999;
+  margin-top: 2px;
+}
+
+.expense-info {
+  color: #888;
+  font-size: 12px;
+  line-height: 1.7;
+  margin-top: 8px;
+}
+
+.delete-btn {
+  border: 0;
+  background: #f3f1ee;
+  color: #888;
+  border-radius: 8px;
+  padding: 7px 10px;
+  margin-top: 9px;
+  cursor: pointer;
+}
+
+.settlement {
+  background: #f7f5f1;
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 9px;
+}
+
+.settlement-text {
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.settlement-amount {
+  font-weight: 700;
+}
+
+.empty {
+  text-align: center;
+  color: #aaa;
+  padding: 28px 10px;
+  font-size: 14px;
+}
+
+.clear-btn {
+  width: 100%;
+  border: 1px solid #ddd;
+  background: white;
+  color: #999;
+  border-radius: 11px;
+  padding: 11px;
+  cursor: pointer;
+  margin-top: 5px;
+}
+
+.note {
+  font-size: 11px;
+  color: #aaa;
+  text-align: center;
+  margin-top: 20px;
+  line-height: 1.7;
+}
+
+@media (max-width: 520px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .full {
+    grid-column: auto;
+  }
+
+  .summary {
+    grid-template-columns: 1fr;
+  }
+
+  .people {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>旅行分帳小幫手</h1>
+  <div class="subtitle">四個人的旅費，讓我幫你算清楚 ♡</div>
+
+  <!-- 匯率 -->
+  <div class="card">
+    <div class="card-title">💱 匯率設定</div>
+
+    <label>韓元 KRW → 台幣 TWD</label>
+    <div class="rate-box">
+      目前設定：
+      <strong>1,000 韓元 = <span id="rateText">23</span> 台幣</strong>
+
+      <input
+        id="rateInput"
+        type="number"
+        value="23"
+        min="0"
+        step="0.01"
+        oninput="updateRate()"
+      >
+    </div>
+  </div>
+
+  <!-- 新增支出 -->
+  <div class="card">
+    <div class="card-title">➕ 新增一筆支出</div>
+
+    <div class="grid">
+
+      <div class="full">
+        <label>吃了什麼／買了什麼</label>
+        <input
+          id="expenseName"
+          type="text"
+          placeholder="例如：韓牛、咖啡、交通"
+        >
+      </div>
+
+      <div>
+        <label>分類</label>
+        <select id="category">
+          <option>🍜 餐飲</option>
+          <option>☕ 咖啡</option>
+          <option>🚕 交通</option>
+          <option>🏨 住宿</option>
+          <option>🛍️ 購物</option>
+          <option>🎫 門票</option>
+          <option>📦 其他</option>
+        </select>
+      </div>
+
+      <div>
+        <label>金額（韓元）</label>
+        <input
+          id="amount"
+          type="number"
+          placeholder="例如：50000"
+          min="0"
+        >
+      </div>
+
+      <div class="full">
+        <label>誰先付？</label>
+        <select id="payer">
+          <option>羊咩</option>
+          <option>ㄚ霆</option>
+          <option>多比</option>
+          <option>艾薇</option>
+        </select>
+      </div>
+
+      <div class="full">
+        <label>這筆由誰分攤？</label>
+
+        <div class="people">
+          <div class="person selected" data-person="羊咩" onclick="togglePerson(this)">
+            羊咩
+          </div>
+
+          <div class="person selected" data-person="ㄚ霆" onclick="togglePerson(this)">
+            ㄚ霆
+          </div>
+
+          <div class="person selected" data-person="多比" onclick="togglePerson(this)">
+            多比
+          </div>
+
+          <div class="person selected" data-person="艾薇" onclick="togglePerson(this)">
+            艾薇
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <button class="add-btn" onclick="addExpense()">
+      ＋ 加入這筆支出
+    </button>
+  </div>
+
+
+  <!-- 總支出 -->
+  <div class="card">
+    <div class="card-title">💰 目前總支出</div>
+
+    <div class="total-box">
+      <div class="total-main" id="totalKRW">₩0</div>
+      <div class="total-sub" id="totalTWD">NT$0</div>
+    </div>
+
+    <div id="expenseList">
+      <div class="empty">
+        還沒有任何消費紀錄
+      </div>
+    </div>
+  </div>
+
+
+  <!-- 每人結算 -->
+  <div class="card">
+    <div class="card-title">📊 四人結算</div>
+
+    <div id="summary" class="summary"></div>
+  </div>
+
+
+  <!-- 最後誰給誰 -->
+  <div class="card">
+    <div class="card-title">💸 最後怎麼給錢</div>
+
+    <div id="settlement"></div>
+  </div>
+
+
+  <button class="clear-btn" onclick="clearAll()">
+    清除全部紀錄
+  </button>
+
+  <div class="note">
+    資料會自動儲存在這台裝置的瀏覽器中。<br>
+    如果換手機／換瀏覽器，資料不會自動同步。
+  </div>
+
+</div>
+
+
+<script>
+
+const people = ["羊咩", "ㄚ霆", "多比", "艾薇"];
+
+let rate = Number(localStorage.getItem("travelRate")) || 23;
+
+let expenses =
+  JSON.parse(localStorage.getItem("travelExpenses")) || [];
+
+
+/* -------------------------
+   匯率
+------------------------- */
+
+function updateRate() {
+
+  rate = Number(document.getElementById("rateInput").value) || 0;
+
+  document.getElementById("rateText").innerText =
+    rate.toLocaleString(undefined, {
+      maximumFractionDigits: 2
+    });
+
+  localStorage.setItem("travelRate", rate);
+
+  render();
+}
+
+
+/* -------------------------
+   選擇分攤人
+------------------------- */
+
+function togglePerson(element) {
+
+  element.classList.toggle("selected");
+
+}
+
+
+/* -------------------------
+   新增支出
+------------------------- */
+
+function addExpense() {
+
+  const name =
+    document.getElementById("expenseName").value.trim();
+
+  const amount =
+    Number(document.getElementById("amount").value);
+
+  const category =
+    document.getElementById("category").value;
+
+  const payer =
+    document.getElementById("payer").value;
+
+  const selected =
+    [...document.querySelectorAll(".person.selected")]
+      .map(el => el.dataset.person);
+
+
+  if (!name) {
+    alert("請輸入這筆支出是什麼！");
+    return;
+  }
+
+  if (!amount || amount <= 0) {
+    alert("請輸入正確的金額！");
+    return;
+  }
+
+  if (selected.length === 0) {
+    alert("至少要選一位分攤的人！");
+    return;
+  }
+
+
+  const expense = {
+
+    id: Date.now(),
+
+    name: name,
+
+    amount: amount,
+
+    category: category,
+
+    payer: payer,
+
+    participants: selected
+
+  };
+
+
+  expenses.push(expense);
+
+  save();
+
+  document.getElementById("expenseName").value = "";
+
+  document.getElementById("amount").value = "";
+
+  render();
+
+}
+
+
+/* -------------------------
+   刪除
+------------------------- */
+
+function deleteExpense(id) {
+
+  expenses =
+    expenses.filter(expense => expense.id !== id);
+
+  save();
+
+  render();
+
+}
+
+
+/* -------------------------
+   儲存
+------------------------- */
+
+function save() {
+
+  localStorage.setItem(
+    "travelExpenses",
+    JSON.stringify(expenses)
+  );
+
+}
+
+
+/* -------------------------
+   金額格式
+------------------------- */
+
+function krw(value) {
+
+  return "₩" + Math.round(value).toLocaleString();
+
+}
+
+
+function twd(value) {
+
+  return "NT$" +
+    Math.round(value).toLocaleString();
+
+}
+
+
+function toTWD(krwAmount) {
+
+  return krwAmount * rate / 1000;
+
+}
+
+
+/* -------------------------
+   顯示紀錄
+------------------------- */
+
+function renderExpenses() {
+
+  const list =
+    document.getElementById("expenseList");
+
+  if (expenses.length === 0) {
+
+    list.innerHTML =
+      '<div class="empty">還沒有任何消費紀錄</div>';
+
+    return;
+  }
+
+
+  list.innerHTML = "";
+
+
+  expenses
+    .slice()
+    .reverse()
+    .forEach(expense => {
+
+      const twdAmount =
+        toTWD(expense.amount);
+
+      const each =
+        expense.amount / expense.participants.length;
+
+      const participantText =
+        expense.participants.join("、");
+
+
+      const div =
+        document.createElement("div");
+
+      div.className = "expense";
+
+
+      div.innerHTML = `
+
+        <div class="expense-top">
+
+          <div>
+            <div class="expense-name">
+              ${escapeHTML(expense.name)}
+              <span class="expense-category">
+                ${escapeHTML(expense.category)}
+              </span>
+            </div>
+          </div>
+
+          <div class="expense-money">
+            <div class="krw">
+              ${krw(expense.amount)}
+            </div>
+
+            <div class="twd">
+              ${twd(twdAmount)}
+            </div>
+          </div>
+
+        </div>
+
+
+        <div class="expense-info">
+
+          先付：${escapeHTML(expense.payer)}<br>
+
+          分攤：
+          ${escapeHTML(participantText)}<br>
+
+          每人：
+          ${krw(each)}
+          ／
+          ${twd(toTWD(each))}
+
+        </div>
+
+
+        <button
+          class="delete-btn"
+          onclick="deleteExpense(${expense.id})"
+        >
+          刪除
+        </button>
+
+      `;
+
+
+      list.appendChild(div);
+
+    });
+
+}
+
+
+/* -------------------------
+   計算每個人的帳
+------------------------- */
+
+function calculateBalances() {
+
+  const data = {};
+
+  people.forEach(person => {
+
+    data[person] = {
+
+      paid: 0,
+
+      owed: 0,
+
+      balance: 0
+
+    };
+
+  });
+
+
+  expenses.forEach(expense => {
+
+    // 先付的人增加已付款
+    data[expense.payer].paid +=
+      expense.amount;
+
+
+    // 分攤的人增加應付
+    const share =
+      expense.amount /
+      expense.participants.length;
+
+
+    expense.participants.forEach(person => {
+
+      data[person].owed += share;
+
+    });
+
+  });
+
+
+  people.forEach(person => {
+
+    data[person].balance =
+      data[person].paid -
+      data[person].owed;
+
+  });
+
+
+  return data;
+
+}
+
+
+/* -------------------------
+   顯示摘要
+------------------------- */
+
+function renderSummary() {
+
+  const summary =
+    document.getElementById("summary");
+
+  const data =
+    calculateBalances();
+
+
+  summary.innerHTML = "";
+
+
+  people.forEach(person => {
+
+    const d = data[person];
+
+    let balanceClass =
+      "balance-zero";
+
+    let balanceText =
+      "剛好";
+
+    if (d.balance > 0.5) {
+
+      balanceClass =
+        "balance-positive";
+
+      balanceText =
+        "應收 " +
+        krw(d.balance) +
+        " / " +
+        twd(toTWD(d.balance));
+
+    }
+
+    else if (d.balance < -0.5) {
+
+      balanceClass =
+        "balance-negative";
+
+      balanceText =
+        "應付 " +
+        krw(Math.abs(d.balance)) +
+        " / " +
+        twd(toTWD(Math.abs(d.balance)));
+
+    }
+
+
+    const div =
+      document.createElement("div");
+
+    div.className =
+      "person-summary";
+
+
+    div.innerHTML = `
+
+      <div class="person-name">
+        ${person}
+      </div>
+
+      <div class="money-line">
+        先付：
+        ${krw(d.paid)}
+      </div>
+
+      <div class="money-line">
+        應付：
+        ${krw(d.owed)}
+      </div>
+
+      <div class="money-line ${balanceClass}">
+        ${balanceText}
+      </div>
+
+    `;
+
+
+    summary.appendChild(div);
+
+  });
+
+}
+
+
+/* -------------------------
+   計算最後付款
+------------------------- */
+
+function calculateSettlement() {
+
+  const data =
+    calculateBalances();
+
+
+  let creditors = [];
+
+  let debtors = [];
+
+
+  people.forEach(person => {
+
+    const balance =
+      data[person].balance;
+
+
+    if (balance > 0.5) {
+
+      creditors.push({
+
+        person: person,
+
+        amount: balance
+
+      });
+
+    }
+
+    else if (balance < -0.5) {
+
+      debtors.push({
+
+        person: person,
+
+        amount: Math.abs(balance)
+
+      });
+
+    }
+
+  });
+
+
+  let result = [];
+
+
+  let i = 0;
+
+  let j = 0;
+
+
+  while (
+    i < debtors.length &&
+    j < creditors.length
+  ) {
+
+    const debtor =
+      debtors[i];
+
+    const creditor =
+      creditors[j];
+
+
+    const amount =
+      Math.min(
+        debtor.amount,
+        creditor.amount
+      );
+
+
+    if (amount > 0.01) {
+
+      result.push({
+
+        from: debtor.person,
+
+        to: creditor.person,
+
+        amount: amount
+
+      });
+
+    }
+
+
+    debtor.amount -= amount;
+
+    creditor.amount -= amount;
+
+
+    if (debtor.amount < 0.01) {
+
+      i++;
+
+    }
+
+
+    if (creditor.amount < 0.01) {
+
+      j++;
+
+    }
+
+  }
+
+
+  return result;
+
+}
+
+
+/* -------------------------
+   顯示最後結果
+------------------------- */
+
+function renderSettlement() {
+
+  const box =
+    document.getElementById("settlement");
+
+
+  const result =
+    calculateSettlement();
+
+
+  if (expenses.length === 0) {
+
+    box.innerHTML =
+      '<div class="empty">新增支出後，這裡會自動算出誰要給誰。</div>';
+
+    return;
+
+  }
+
+
+  if (result.length === 0) {
+
+    box.innerHTML = `
+      <div class="settlement">
+        <div class="settlement-text">
+          🎉 目前大家剛好結清，不需要再互相給錢！
+        </div>
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  box.innerHTML = "";
+
+
+  result.forEach(item => {
+
+    const div =
+      document.createElement("div");
+
+    div.className =
+      "settlement";
+
+
+    div.innerHTML = `
+
+      <div class="settlement-text">
+
+        <strong>${item.from}</strong>
+        → 
+        <strong>${item.to}</strong>
+
+        <br>
+
+        <span class="settlement-amount">
+          ${krw(item.amount)}
+          ／
+          ${twd(toTWD(item.amount))}
+        </span>
+
+      </div>
+
+    `;
+
+
+    box.appendChild(div);
+
+  });
+
+}
+
+
+/* -------------------------
+   總金額
+------------------------- */
+
+function renderTotal() {
+
+  const total =
+    expenses.reduce(
+      (sum, expense) =>
+        sum + expense.amount,
+      0
+    );
+
+
+  document.getElementById("totalKRW")
+    .innerText =
+    krw(total);
+
+
+  document.getElementById("totalTWD")
+    .innerText =
+    twd(toTWD(total));
+
+}
+
+
+/* -------------------------
+   全部更新
+------------------------- */
+
+function render() {
+
+  document.getElementById("rateText")
+    .innerText =
+    rate.toLocaleString(undefined, {
+      maximumFractionDigits: 2
+    });
+
+  document.getElementById("rateInput")
+    .value = rate;
+
+
+  renderExpenses();
+
+  renderTotal();
+
+  renderSummary();
+
+  renderSettlement();
+
+}
+
+
+/* -------------------------
+   清除全部
+------------------------- */
+
+function clearAll() {
+
+  if (expenses.length === 0) {
+
+    return;
+
+  }
+
+
+  const yes =
+    confirm(
+      "確定要刪除全部旅行支出紀錄嗎？"
+    );
+
+
+  if (!yes) {
+
+    return;
+
+  }
+
+
+  expenses = [];
+
+  save();
+
+  render();
+
+}
+
+
+/* -------------------------
+   防止輸入 HTML
+------------------------- */
+
+function escapeHTML(text) {
+
+  const div =
+    document.createElement("div");
+
+  div.textContent = text;
+
+  return div.innerHTML;
+
+}
+
+
+/* -------------------------
+   啟動
+------------------------- */
+
+render();
+
+</script>
+
+</body>
+</html>

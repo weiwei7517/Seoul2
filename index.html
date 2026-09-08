@@ -98,7 +98,6 @@ select:focus {
   grid-column: 1 / -1;
 }
 
-/* 幣別 */
 .currency-buttons {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -121,7 +120,6 @@ select:focus {
   border-color: #555;
 }
 
-/* 分攤人 */
 .people {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -316,6 +314,17 @@ select:focus {
   font-weight: 700;
 }
 
+.currency-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #666;
+  margin: 14px 0 8px;
+}
+
+.currency-title:first-child {
+  margin-top: 0;
+}
+
 .empty {
   text-align: center;
   color: #aaa;
@@ -376,9 +385,7 @@ select:focus {
 
   <div class="card-title">💱 匯率設定</div>
 
-  <label>
-    1,000 韓元 =
-  </label>
+  <label>1,000 韓元 = 台幣</label>
 
   <div class="rate-box">
 
@@ -652,17 +659,14 @@ const people = [
   "艾薇"
 ];
 
-
 let rate =
 Number(localStorage.getItem("travelRate")) || 23;
 
-
 let currency = "KRW";
-
 
 let expenses =
 JSON.parse(
-localStorage.getItem("travelExpenses")
+  localStorage.getItem("travelExpenses")
 ) || [];
 
 
@@ -687,7 +691,6 @@ function selectCurrency(type) {
       "selected",
       type === "TWD"
     );
-
 }
 
 
@@ -717,7 +720,6 @@ function updateRate() {
   );
 
   render();
-
 }
 
 
@@ -730,7 +732,6 @@ function togglePerson(element) {
   element.classList.toggle(
     "selected"
   );
-
 }
 
 
@@ -746,20 +747,16 @@ function addExpense() {
       .value
       .trim();
 
-
   const amount =
     Number(
       document.getElementById("amount").value
     );
 
-
   const category =
     document.getElementById("category").value;
 
-
   const payer =
     document.getElementById("payer").value;
-
 
   const selected =
     [
@@ -834,46 +831,47 @@ function addExpense() {
 
 
   render();
+}
+
+
+/* =========================
+   韓元換台幣
+   只用於「同時顯示」
+   不用於跨幣別結算
+========================= */
+
+function krwToTWD(amount) {
+
+  return amount * rate / 1000;
 
 }
 
 
 /* =========================
-   幣別轉台幣
+   台幣換韓元
+   只用於「同時顯示」
+   不用於跨幣別結算
 ========================= */
 
-function toTWD(expense) {
+function twdToKRW(amount) {
 
-  if (expense.currency === "TWD") {
+  if (!rate) return 0;
 
-    return expense.amount;
-
-  }
-
-  return expense.amount * rate / 1000;
+  return amount * 1000 / rate;
 
 }
 
 
 /* =========================
-   幣別轉韓元
+   儲存
 ========================= */
 
-function toKRW(expense) {
+function save() {
 
-  if (expense.currency === "KRW") {
-
-    return expense.amount;
-
-  }
-
-  if (!rate) {
-
-    return 0;
-
-  }
-
-  return expense.amount * 1000 / rate;
+  localStorage.setItem(
+    "travelExpenses",
+    JSON.stringify(expenses)
+  );
 
 }
 
@@ -896,20 +894,6 @@ function formatTWD(value) {
   return "NT$" +
     Math.round(value)
       .toLocaleString();
-
-}
-
-
-/* =========================
-   儲存
-========================= */
-
-function save() {
-
-  localStorage.setItem(
-    "travelExpenses",
-    JSON.stringify(expenses)
-  );
 
 }
 
@@ -952,12 +936,32 @@ function renderExpenses() {
         "expense";
 
 
-      const krwAmount =
-        toKRW(expense);
+      let originalMoney = "";
+
+      let convertedMoney = "";
 
 
-      const twdAmount =
-        toTWD(expense);
+      if (expense.currency === "KRW") {
+
+        originalMoney =
+          formatKRW(expense.amount);
+
+        convertedMoney =
+          formatTWD(
+            krwToTWD(expense.amount)
+          );
+
+      } else {
+
+        originalMoney =
+          formatTWD(expense.amount);
+
+        convertedMoney =
+          formatKRW(
+            twdToKRW(expense.amount)
+          );
+
+      }
 
 
       const share =
@@ -965,7 +969,7 @@ function renderExpenses() {
         expense.participants.length;
 
 
-      let shareText;
+      let shareText = "";
 
 
       if (expense.currency === "KRW") {
@@ -974,10 +978,7 @@ function renderExpenses() {
           formatKRW(share) +
           " ／ " +
           formatTWD(
-            toTWD({
-              amount: share,
-              currency: "KRW"
-            })
+            krwToTWD(share)
           );
 
       } else {
@@ -986,10 +987,7 @@ function renderExpenses() {
           formatTWD(share) +
           " ／ " +
           formatKRW(
-            toKRW({
-              amount: share,
-              currency: "TWD"
-            })
+            twdToKRW(share)
           );
 
       }
@@ -1017,11 +1015,11 @@ function renderExpenses() {
           <div class="expense-money">
 
             <div class="krw">
-              ${formatKRW(krwAmount)}
+              ${originalMoney}
             </div>
 
             <div class="twd">
-              ${formatTWD(twdAmount)}
+              ${convertedMoney}
             </div>
 
           </div>
@@ -1031,10 +1029,8 @@ function renderExpenses() {
 
         <div class="expense-info">
 
-          ${expense.currency === "KRW"
-            ? "原始金額：" + formatKRW(expense.amount)
-            : "原始金額：" + formatTWD(expense.amount)
-          }
+          原始金額：
+          ${originalMoney}
 
           <br>
 
@@ -1093,21 +1089,10 @@ function deleteExpense(id) {
 
 
 /* =========================
-   統一換算
+   分幣別計算
 ========================= */
 
-function expenseToTWD(expense) {
-
-  return toTWD(expense);
-
-}
-
-
-/* =========================
-   計算結算
-========================= */
-
-function calculateBalances() {
+function calculateBalancesByCurrency(currencyType) {
 
   const data = {};
 
@@ -1118,38 +1103,41 @@ function calculateBalances() {
 
       paid: 0,
 
-      owed: 0
+      owed: 0,
+
+      balance: 0
 
     };
 
   });
 
 
-  expenses.forEach(expense => {
+  expenses
+    .filter(
+      expense =>
+        expense.currency === currencyType
+    )
+    .forEach(expense => {
 
-    const amountTWD =
-      expenseToTWD(expense);
-
-
-    data[expense.payer].paid +=
-      amountTWD;
-
-
-    const share =
-      amountTWD /
-      expense.participants.length;
+      data[expense.payer].paid +=
+        expense.amount;
 
 
-    expense.participants.forEach(
-      person => {
+      const share =
+        expense.amount /
+        expense.participants.length;
 
-        data[person].owed +=
-          share;
 
-      }
-    );
+      expense.participants.forEach(
+        person => {
 
-  });
+          data[person].owed +=
+            share;
+
+        }
+      );
+
+    });
 
 
   people.forEach(person => {
@@ -1167,7 +1155,8 @@ function calculateBalances() {
 
 
 /* =========================
-   摘要
+   每人結算
+   韓元／台幣完全分開
 ========================= */
 
 function renderSummary() {
@@ -1178,8 +1167,12 @@ function renderSummary() {
     );
 
 
-  const data =
-    calculateBalances();
+  const krwData =
+    calculateBalancesByCurrency("KRW");
+
+
+  const twdData =
+    calculateBalancesByCurrency("TWD");
 
 
   summary.innerHTML = "";
@@ -1187,52 +1180,64 @@ function renderSummary() {
 
   people.forEach(person => {
 
-    const d =
-      data[person];
+    const k =
+      krwData[person];
 
 
-    let balanceClass =
-      "balance-zero";
+    const t =
+      twdData[person];
 
 
-    let balanceText =
-      "剛好";
+    let krwBalance = "";
 
 
-    if (d.balance > 0.5) {
-
-      balanceClass =
-        "balance-positive";
+    let twdBalance = "";
 
 
-      balanceText =
-        "應收 " +
-        formatTWD(d.balance) +
-        " ／ " +
-        formatKRW(
-          d.balance * 1000 / rate
-        );
+    if (k.balance > 0.5) {
+
+      krwBalance =
+        `<div class="money-line balance-positive">
+          🇰🇷 應收 ${formatKRW(k.balance)}
+        </div>`;
+
+    } else if (k.balance < -0.5) {
+
+      krwBalance =
+        `<div class="money-line balance-negative">
+          🇰🇷 應付 ${formatKRW(Math.abs(k.balance))}
+        </div>`;
+
+    } else {
+
+      krwBalance =
+        `<div class="money-line balance-zero">
+          🇰🇷 剛好
+        </div>`;
 
     }
 
 
-    else if (d.balance < -0.5) {
+    if (t.balance > 0.5) {
 
-      balanceClass =
-        "balance-negative";
+      twdBalance =
+        `<div class="money-line balance-positive">
+          🇹🇼 應收 ${formatTWD(t.balance)}
+        </div>`;
 
+    } else if (t.balance < -0.5) {
 
-      const value =
-        Math.abs(d.balance);
+      twdBalance =
+        `<div class="money-line balance-negative">
+          🇹🇼 應付 ${formatTWD(Math.abs(t.balance))}
+        </div>`;
 
+    } else {
 
-      balanceText =
-        "應付 " +
-        formatTWD(value) +
-        " ／ " +
-        formatKRW(
-          value * 1000 / rate
-        );
+      twdBalance =
+        `<div class="money-line balance-zero">
+          🇹🇼 剛好
+        </div>`;
 
     }
 
@@ -1251,19 +1256,46 @@ function renderSummary() {
         ${person}
       </div>
 
-      <div class="money-line">
-        先付：
-        ${formatTWD(d.paid)}
-      </div>
 
       <div class="money-line">
-        應付：
-        ${formatTWD(d.owed)}
+
+        🇰🇷 先付：
+        ${formatKRW(k.paid)}
+
       </div>
 
-      <div class="money-line ${balanceClass}">
-        ${balanceText}
+
+      <div class="money-line">
+
+        🇰🇷 應付：
+        ${formatKRW(k.owed)}
+
       </div>
+
+
+      ${krwBalance}
+
+
+      <div style="height:8px;"></div>
+
+
+      <div class="money-line">
+
+        🇹🇼 先付：
+        ${formatTWD(t.paid)}
+
+      </div>
+
+
+      <div class="money-line">
+
+        🇹🇼 應付：
+        ${formatTWD(t.owed)}
+
+      </div>
+
+
+      ${twdBalance}
 
     `;
 
@@ -1276,13 +1308,15 @@ function renderSummary() {
 
 
 /* =========================
-   最後結算
+   單一幣別結算
 ========================= */
 
-function calculateSettlement() {
+function calculateSettlementByCurrency(currencyType) {
 
   const data =
-    calculateBalances();
+    calculateBalancesByCurrency(
+      currencyType
+    );
 
 
   let creditors = [];
@@ -1364,7 +1398,10 @@ function calculateSettlement() {
           creditor.person,
 
         amount:
-          amount
+          amount,
+
+        currency:
+          currencyType
 
       });
 
@@ -1398,7 +1435,7 @@ function calculateSettlement() {
 
 
 /* =========================
-   顯示結算
+   最後怎麼給錢
 ========================= */
 
 function renderSettlement() {
@@ -1407,10 +1444,6 @@ function renderSettlement() {
     document.getElementById(
       "settlement"
     );
-
-
-  const result =
-    calculateSettlement();
 
 
   if (expenses.length === 0) {
@@ -1423,36 +1456,39 @@ function renderSettlement() {
   }
 
 
-  if (result.length === 0) {
+  const krwResult =
+    calculateSettlementByCurrency(
+      "KRW"
+    );
 
-    box.innerHTML = `
 
-      <div class="settlement">
-
-        <div class="settlement-text">
-
-          🎉 目前大家剛好結清，
-          不需要再互相給錢！
-
-        </div>
-
-      </div>
-
-    `;
-
-    return;
-
-  }
+  const twdResult =
+    calculateSettlementByCurrency(
+      "TWD"
+    );
 
 
   box.innerHTML = "";
 
 
-  result.forEach(item => {
+  /* 韓元 */
+
+  const krwTitle =
+    document.createElement("div");
+
+  krwTitle.className =
+    "currency-title";
+
+  krwTitle.innerText =
+    "🇰🇷 韓元結算";
+
+  box.appendChild(krwTitle);
+
+
+  if (krwResult.length === 0) {
 
     const div =
       document.createElement("div");
-
 
     div.className =
       "settlement";
@@ -1461,31 +1497,7 @@ function renderSettlement() {
     div.innerHTML = `
 
       <div class="settlement-text">
-
-        <strong>
-          ${item.from}
-        </strong>
-
-        →
-
-        <strong>
-          ${item.to}
-        </strong>
-
-        <br>
-
-        <span class="settlement-amount">
-
-          ${formatTWD(item.amount)}
-
-          ／
-
-          ${formatKRW(
-            item.amount * 1000 / rate
-          )}
-
-        </span>
-
+        🇰🇷 韓元目前不用互相給錢
       </div>
 
     `;
@@ -1493,29 +1505,159 @@ function renderSettlement() {
 
     box.appendChild(div);
 
-  });
+  } else {
+
+    krwResult.forEach(item => {
+
+      const div =
+        document.createElement("div");
+
+
+      div.className =
+        "settlement";
+
+
+      div.innerHTML = `
+
+        <div class="settlement-text">
+
+          <strong>
+            ${item.from}
+          </strong>
+
+          →
+
+          <strong>
+            ${item.to}
+          </strong>
+
+          <br>
+
+          <span class="settlement-amount">
+
+            ${formatKRW(item.amount)}
+
+          </span>
+
+        </div>
+
+      `;
+
+
+      box.appendChild(div);
+
+    });
+
+  }
+
+
+  /* 台幣 */
+
+  const twdTitle =
+    document.createElement("div");
+
+  twdTitle.className =
+    "currency-title";
+
+  twdTitle.innerText =
+    "🇹🇼 台幣結算";
+
+  box.appendChild(twdTitle);
+
+
+  if (twdResult.length === 0) {
+
+    const div =
+      document.createElement("div");
+
+    div.className =
+      "settlement";
+
+
+    div.innerHTML = `
+
+      <div class="settlement-text">
+        🇹🇼 台幣目前不用互相給錢
+      </div>
+
+    `;
+
+
+    box.appendChild(div);
+
+  } else {
+
+    twdResult.forEach(item => {
+
+      const div =
+        document.createElement("div");
+
+
+      div.className =
+        "settlement";
+
+
+      div.innerHTML = `
+
+        <div class="settlement-text">
+
+          <strong>
+            ${item.from}
+          </strong>
+
+          →
+
+          <strong>
+            ${item.to}
+          </strong>
+
+          <br>
+
+          <span class="settlement-amount">
+
+            ${formatTWD(item.amount)}
+
+          </span>
+
+        </div>
+
+      `;
+
+
+      box.appendChild(div);
+
+    });
+
+  }
 
 }
 
 
 /* =========================
    總支出
+   兩種幣別各自顯示
 ========================= */
 
 function renderTotal() {
 
-  const totalTWD =
-    expenses.reduce(
-      (sum, expense) =>
-        sum + toTWD(expense),
-      0
-    );
+  let totalKRW = 0;
+
+  let totalTWD = 0;
 
 
-  const totalKRW =
-    rate
-      ? totalTWD * 1000 / rate
-      : 0;
+  expenses.forEach(expense => {
+
+    if (expense.currency === "KRW") {
+
+      totalKRW += expense.amount;
+
+    } else {
+
+      totalTWD += expense.amount;
+
+    }
+
+  });
 
 
   document.getElementById(
@@ -1528,6 +1670,7 @@ function renderTotal() {
     "totalTWD"
   ).innerText =
     formatTWD(totalTWD);
+
 
 }
 
